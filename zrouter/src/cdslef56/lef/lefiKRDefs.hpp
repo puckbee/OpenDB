@@ -57,5 +57,7 @@
 #endif
 #endif
 
+#define LEF_COPY_FUNC(varname) {(varname) = prev.varname;}
+
 #endif /* __STDC__ */
 

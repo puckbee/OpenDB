@@ -112,7 +112,7 @@ YACC_CLEAN= $(YACC_SRC_NAME).tab.c $(YACC_SRC_NAME).tab.h \
             $(YACC_SRC_NAME).output
 
 $(YACC_OUTPUT_CODE) $(YACC_OUTPUT_HDR): $(YACC_SRC)
-	bison -v $(YACC_PREFIX_ARG) -d $(YACC_SRC)
+	bison $(YACC_DEBUG) -v $(YACC_PREFIX_ARG) -d $(YACC_SRC)
 	mv $(YACC_SRC_NAME).tab.c $(YACC_OUTPUT_CODE)
 	mv $(YACC_SRC_NAME).tab.h $(YACC_OUTPUT_HDR)
 
@@ -142,9 +142,10 @@ YACC_CLEAN= $(YACC_SRCXX_NAME).tab.cpp $(YACC_SRCXX_NAME).tab.hpp \
             $(YACC_SRCXX_NAME).output
 
 $(YACC_OUTPUT_CODE) $(YACC_OUTPUT_HDR): $(YACC_SRCXX)
-	bison -v $(YACC_PREFIX_ARG) -d $(YACC_SRCXX)
-	mv $(YACC_SRCXX_NAME).tab.cpp $(YACC_OUTPUT_CODE)
-	mv $(YACC_SRCXX_NAME).tab.hpp $(YACC_OUTPUT_HDR)
+	bison $(YACC_DEBUG) -v $(YACC_PREFIX_ARG) -d $(YACC_SRCXX)
+#kosmas mv to cp
+	cp $(YACC_SRCXX_NAME).tab.cpp $(YACC_OUTPUT_CODE)
+	cp $(YACC_SRCXX_NAME).tab.hpp $(YACC_OUTPUT_HDR)
 
 endif
 
@@ -165,12 +166,13 @@ LEX_CLEAN= $(LEX_OUTPUT_CODE) lex.yy.c
 ifneq ($(LEX_PREFIX),)
 LEX_CLEAN+= lex.$(LEF_PREFIX).c
 $(LEX_OUTPUT_CODE): $(LEX_SRC)
-	flex -B -P$(LEX_PREFIX) -F $(LEX_SRC)
-	mv lex.$(LEX_PREFIX).c $(LEX_OUTPUT_CODE)
+	flex $(LEX_DEBUG) -B -P$(LEX_PREFIX) -F $(LEX_SRC)
+#kosmas mv to cp
+	cp lex.$(LEX_PREFIX).c $(LEX_OUTPUT_CODE)
 else
 LEX_CLEAN+= lex.yy.c
 $(LEX_OUTPUT_CODE): $(LEX_SRC)
-	flex -B -F $(LEX_SRC)
+	flex $(LEX_DEBUG) -B -F $(LEX_SRC)
 	mv lex.yy.c $(LEX_OUTPUT_CODE)
 endif
 endif

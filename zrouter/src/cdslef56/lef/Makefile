@@ -3,6 +3,9 @@
 #
 include ../../Makefile.defs
 
+LEX_DEBUG=1
+YACC_DEBUG=1
+
 YACC_SRC=lef.y
 YACC_OUTPUT=lef_parser
 YACC_PREFIX=lefyy
