@@ -63,6 +63,18 @@ ifneq ($(LIBNAME),)
 STATIC_LIBRARY=lib$(LIBNAME).a
 endif
 
+YACC_DEBUG_FLAGS ?= 
+ifeq ($(YACC_DEBUG),1)
+YACC_DEBUG_FLAGS += --debug
+CFLAGS += -DXYYDEBUG=1
+CXXFLAGS += -DXYYDEBUG=1
+endif
+
+LEX_DEBUG_FLAGS ?= 
+ifeq ($(LEX_DEBUG),1)
+LEX_DEBUG_FLAGS += -d
+endif
+
 #---------------------------------------------------------------------------
 # default rule
 #---------------------------------------------------------------------------
@@ -107,12 +119,14 @@ YACC_OUTPUT_CODE=$(YACC_OUTPUT).cpp
 YACC_OUTPUT_HDR=$(YACC_OUTPUT).h
 endif
 
+
+
 YACC_CLEAN= $(YACC_SRC_NAME).tab.c $(YACC_SRC_NAME).tab.h \
             $(YACC_OUTPUT_CODE) $(YACC_OUTPUT_HDR) \
             $(YACC_SRC_NAME).output
 
 $(YACC_OUTPUT_CODE) $(YACC_OUTPUT_HDR): $(YACC_SRC)
-	bison $(YACC_DEBUG) -v $(YACC_PREFIX_ARG) -d $(YACC_SRC)
+	bison $(YACC_DEBUG_FLAGS) -v $(YACC_PREFIX_ARG) -d $(YACC_SRC)
 	mv $(YACC_SRC_NAME).tab.c $(YACC_OUTPUT_CODE)
 	mv $(YACC_SRC_NAME).tab.h $(YACC_OUTPUT_HDR)
 
@@ -142,10 +156,10 @@ YACC_CLEAN= $(YACC_SRCXX_NAME).tab.cpp $(YACC_SRCXX_NAME).tab.hpp \
             $(YACC_SRCXX_NAME).output
 
 $(YACC_OUTPUT_CODE) $(YACC_OUTPUT_HDR): $(YACC_SRCXX)
-	bison $(YACC_DEBUG) -v $(YACC_PREFIX_ARG) -d $(YACC_SRCXX)
+	bison $(YACC_DEBUG_FLAGS) -v $(YACC_PREFIX_ARG) -d $(YACC_SRCXX)
 #kosmas mv to cp
-	cp $(YACC_SRCXX_NAME).tab.cpp $(YACC_OUTPUT_CODE)
-	cp $(YACC_SRCXX_NAME).tab.hpp $(YACC_OUTPUT_HDR)
+	mv $(YACC_SRCXX_NAME).tab.cpp $(YACC_OUTPUT_CODE)
+	mv $(YACC_SRCXX_NAME).tab.hpp $(YACC_OUTPUT_HDR)
 
 endif
 
@@ -166,13 +180,13 @@ LEX_CLEAN= $(LEX_OUTPUT_CODE) lex.yy.c
 ifneq ($(LEX_PREFIX),)
 LEX_CLEAN+= lex.$(LEF_PREFIX).c
 $(LEX_OUTPUT_CODE): $(LEX_SRC)
-	flex $(LEX_DEBUG) -B -P$(LEX_PREFIX) -F $(LEX_SRC)
+	flex $(LEX_DEBUG_FLAGS) -B -P$(LEX_PREFIX) -F $(LEX_SRC)
 #kosmas mv to cp
-	cp lex.$(LEX_PREFIX).c $(LEX_OUTPUT_CODE)
+	mv lex.$(LEX_PREFIX).c $(LEX_OUTPUT_CODE)
 else
 LEX_CLEAN+= lex.yy.c
 $(LEX_OUTPUT_CODE): $(LEX_SRC)
-	flex $(LEX_DEBUG) -B -F $(LEX_SRC)
+	flex $(LEX_DEBUG_FLAGS) -B -F $(LEX_SRC)
 	mv lex.yy.c $(LEX_OUTPUT_CODE)
 endif
 endif
