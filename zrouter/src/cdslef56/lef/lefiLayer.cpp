@@ -1,3 +1,34 @@
+///////////////////////////////////////////////////////////////////////////////
+// BSD 3-Clause License
+//
+// Copyright (c) 2019, Nefelus Inc
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 /*
  *     This  file  is  part  of  the  Cadence  LEF/DEF  Open   Source
  *  Distribution,  Product Version 5.6, and is subject to the Cadence
@@ -580,6 +611,7 @@ void lefiSpacingTable::Init() {
   this->hasInfluence_ = 0;
   this->parallel_ = 0;
   this->influence_ = 0;
+  this->twoWidths_ = 0;
 }
 
 void lefiSpacingTable::Destroy() {
@@ -1805,7 +1837,6 @@ void lefiLayer::setProtrusion(double width1, double length, double width2) {
 //        when bumping to new list, need to copy also hasUseLengthThreshold_
 //        and lengthThreshold_
 void lefiLayer::setSpacingMin(double dist) {
-// fprintf(stdout, " K_SPACING NUMBER dist=%g\n", dist);
   if (this->numSpacings_ == this->spacingsAllocated_) {
     double* nd;
     char** nn;             // Also set up the spacing name
@@ -1820,6 +1851,8 @@ void lefiLayer::setSpacingMin(double dist) {
     int    *hpe;           // hasSpacingParellelEdge_
     double *nps, *npw;     // parSpace_, parWithin_
     int    *hte;           // hasSpacingTwoEdges_
+    int *ssn;           // hasSpacingSamenet_
+    int *hsno;           // hasSpacingSamenetPGonly_
     double *naw;           // adjacentWithin_
     double *nrmin, *nrmax; // rangeMin_, rangeMax_
     double *nri, *nrimin, *nrimax; // rangeInfluence_, rangeInfluenceRangeMin_,
@@ -1861,6 +1894,8 @@ void lefiLayer::setSpacingMin(double dist) {
        nt = (double*)lefMalloc(sizeof(double)*lim);   
        ntmin = (double*)lefMalloc(sizeof(double)*lim);   
        ntmax = (double*)lefMalloc(sizeof(double)*lim);   
+       ssn = (int*)lefMalloc(sizeof(int)*lim);   
+       hsno = (int*)lefMalloc(sizeof(int)*lim);   
     } else {
        lim = this->spacingsAllocated_ * 2;
        this->spacingsAllocated_ = lim;
@@ -1892,6 +1927,8 @@ void lefiLayer::setSpacingMin(double dist) {
        nt = (double*)lefMalloc(sizeof(double)*lim);
        ntmin = (double*)lefMalloc(sizeof(double)*lim);
        ntmax = (double*)lefMalloc(sizeof(double)*lim);
+       ssn = (int*)lefMalloc(sizeof(int)*lim);
+       hsno = (int*)lefMalloc(sizeof(int)*lim);
        lim /= 2;
        for (i = 0; i < lim; i++) {
          nd[i] = this->spacing_[i];
@@ -1900,6 +1937,8 @@ void lefiLayer::setSpacingMin(double dist) {
          else
            nn[i] = 0;
          nac[i] = this->spacingAdjacentCuts_[i];
+         ssn[i] = this-> hasSpacingSamenet_[i];
+         hsno[i] = this-> hasSpacingSamenet_[i];
          naw[i] = this->spacingAdjacentWithin_[i];
          nsn[i] = this->hasSpacingName_[i];
          nsa[i] = this->hasSpacingAdjacent_[i];
@@ -1928,6 +1967,7 @@ void lefiLayer::setSpacingMin(double dist) {
        }
        lefFree((char*)(this->spacing_));
        lefFree((char*)(this->spacingName_));
+       lefFree((char*)(this-> hasSpacingSamenet_));
        lefFree((char*)(this->spacingAdjacentCuts_));
        lefFree((char*)(this->spacingAdjacentWithin_));
        lefFree((char*)(this->hasSpacingName_));
@@ -1960,6 +2000,8 @@ void lefiLayer::setSpacingMin(double dist) {
     this->spacingAdjacentCuts_ = nac;
     this->spacingAdjacentWithin_ = naw;
     this->hasSpacingName_ = nsn;
+    this->hasSpacingSamenet_ = ssn;
+    this->hasSpacingSamenetPGonly_ = hsno;
     this->hasSpacingAdjacent_ = nsa;
     this->hasSpacingRange_ = nr;
     this->hasSpacingCenterToCenter_ = ncc;
@@ -1989,6 +2031,8 @@ void lefiLayer::setSpacingMin(double dist) {
   this->spacingName_[this->numSpacings_] = 0;
   this->hasSpacingName_[this->numSpacings_] = 0;
   this->hasSpacingAdjacent_[this->numSpacings_] = 0;
+  this->hasSpacingSamenetPGonly_[this->numSpacings_] = 0;
+  this->hasSpacingSamenet_[this->numSpacings_] = 0;
   this->hasSpacingRange_[this->numSpacings_] = 0;
   this->hasSpacingCenterToCenter_[this->numSpacings_] = 0;
   this->hasSpacingParallelOverlap_[this->numSpacings_] = 0;
@@ -2079,6 +2123,7 @@ void lefiLayer::setSpacingCenterToCenter() {
 
 // 5.7
 void lefiLayer::setSpacingParallelOverlap() {
+// DEBUG NOW
   this->hasSpacingParallelOverlap_[this->numSpacings_-1] = 1;
 }
 
@@ -2089,12 +2134,35 @@ void
 lefiLayer::addSpacingTableOrthoWithin(double    cutWithin,
                                       double    orthoSp)
 {
+// DEBUG NOW
     spacingTableOrtho_->addOrthogonal(cutWithin, orthoSp);
     hasSpacingTableOrtho_ = 1;
 }
 // 5.7
+int
+lefiLayer::hasSpacingTableOrtho() const
+{
+    return hasSpacingTableOrtho_ ? 1 : 0;
+}
+
+void
+lefiLayer::setSpacingTableOrtho()
+{
+// DEBUG NOW
+
+    spacingTableOrtho_ = (lefiOrthogonal*) lefMalloc(sizeof(lefiOrthogonal));
+    spacingTableOrtho_->Init();
+}
+// 5.7
+lefiOrthogonal *
+lefiLayer::orthogonal() const
+{
+    return spacingTableOrtho_;
+}
+
 
 // ------------------------------------------ 5.8 ----------------------------
+
 
 // 5.7
 void
@@ -2103,15 +2171,32 @@ lefiLayer::setSpacingAdjacentExcept()
     hasSpacingAdjacentExcept_[numSpacings_ - 1] = 1;
 }
 // 5.7
+int
+lefiLayer::hasSpacingSamenet(int index) const
+{
+    return ((hasSpacing_ != 0) &&
+            (hasSpacingSamenet_[index] != 0)) ? 1 : 0;
+}
+
+// 5.7
 void
 lefiLayer::setSpacingSamenet()
 {
+// DEBUG NOW
     hasSpacingSamenet_[numSpacings_ - 1] = 1;
 }
+int
+lefiLayer::hasSpacingSamenetPGonly(int index) const
+{
+    return ((hasSpacing_ != 0) &&
+            (hasSpacingSamenetPGonly_[index] != 0)) ? 1 : 0;
+}
+
 // 5.7
 void
 lefiLayer::setSpacingSamenetPGonly()
 {
+// DEBUG NOW
     hasSpacingSamenetPGonly_[numSpacings_ - 1] = 1;
 }
 // 5.7
@@ -2139,7 +2224,6 @@ void lefiLayer::setSpacingEol(double width, double within) {
   this->hasSpacingEndOfLine_[this->numSpacings_-1] = 1;
   this->eolWidth_[this->numSpacings_-1] = width;
   this->eolWithin_[this->numSpacings_-1] = within;
-// fprintf(stdout, " K_ENDOFLINE NUMBER K_WITHIN NUMBER width=%g widthin=%g\n", width, within);
 }
 
 // 5.7
@@ -2147,13 +2231,11 @@ void lefiLayer::setSpacingParSW(double space, double within) {
   this->hasSpacingParellelEdge_[this->numSpacings_-1] = 1;
   this->parSpace_[this->numSpacings_-1] = space;
   this->parWithin_[this->numSpacings_-1] = within;
-// fprintf(stdout, " K_PARALLELEDGE NUMBER K_WITHIN NUMBER space=%g widthin=%g\n", space, within);
 }
 
 // 5.7
 void lefiLayer::setSpacingParTwoEdges() {
   this->hasSpacingTwoEdges_[this->numSpacings_-1] = 1;
-// fprintf(stdout, " K_PARALLELEDGE NUMBER K_WITHIN NUMBER - has two edges\n");
 }
 
 // 5.7
@@ -3048,12 +3130,10 @@ void lefiLayer::print(FILE* f) const {
 
 
 void lefiLayer::addProp(const char* name, const char* value, const char type) {
-// fprintf (stdout, "addProp: %s %s %c\n", name, value, type);
   int len = strlen(name) + 1;
 //  char*  tvalue;
 //  int    vlen, i;
   if (this->numProps_ == this->propsAllocated_) {
-// fprintf (stdout, "addProp: %s %s %c\n", name, value, type);
     int i;
     int max;
     int lim = this->numProps_;
@@ -3760,6 +3840,38 @@ void lefiLayer::addSpParallelWidthSpacing() {
   this->numAllocated_ = 0;
   this->nums_ = 0;
 }
+
+void
+lefiLayer::addSpTwoWidths(double    width,
+                          double    runLength)
+{
+    lefiSpacingTable *sp;
+    sp = spacingTable_[numSpacingTable_ - 1];
+    /* This will never happen since in lef.y, the grammer requires a number for
+ *        spacing
+ *              if (numNums_ == 0) {
+ *                       * spacing is required in TWOWIDTHS *
+ *                                lefiError("ERROR (LEFPARS-1324): Incorrect syntax defined for the statement TWOWIDTHS.\nspacing, which is required is not defined.");
+ *                                         return;
+ *                                               }
+ *                                                   */
+    sp->addTwoWidths(width, runLength, numNums_,
+                     nums_, hasTwoWidthPRL_);
+    // Since inside addTwoWidthsSpacing copy the nums_, we can free it
+    // here
+    lefFree((char*) (nums_));
+    numNums_ = 0;
+    numAllocated_ = 0;
+    nums_ = 0;
+    hasTwoWidthPRL_ = 0;
+}
+void
+lefiLayer::setSpTwoWidthsHasPRL(int hasPRL)
+{
+    hasTwoWidthPRL_ = hasPRL;
+}
+
+    //
 
 void lefiLayer::setInfluence() {
   lefiSpacingTable* sp;

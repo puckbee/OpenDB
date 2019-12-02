@@ -45,7 +45,9 @@ void create_box( dbSWire * wire,
     
     if ( (cur_x == prev_x) && (cur_y == prev_y) ) // single point
     {
+/* TODO
         assert( 0 && "ambiguous path segment" );
+*/
     }
     else if ( cur_x == prev_x ) // vert. path
     {
@@ -112,7 +114,8 @@ void create_box( dbSWire * wire,
     }
     else
     {
-        assert(0 && "non-orthogonal path segment"); // illegal: non-orthogonal-path
+	// TODO Def Parser
+        // TODO assert(0 && "non-orthogonal path segment"); // illegal: non-orthogonal-path
     }
 }
 

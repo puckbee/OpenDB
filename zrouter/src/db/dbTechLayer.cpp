@@ -1,34 +1,34 @@
 ///////////////////////////////////////////////////////////////////////////////
-//// BSD 3-Clause License
-////
-//// Copyright (c) 2019, Nefelus Inc
-//// All rights reserved.
-////
-//// Redistribution and use in source and binary forms, with or without
-//// modification, are permitted provided that the following conditions are met:
-////
-//// * Redistributions of source code must retain the above copyright notice, this
-////   list of conditions and the following disclaimer.
-////
-//// * Redistributions in binary form must reproduce the above copyright notice,
-////   this list of conditions and the following disclaimer in the documentation
-////   and/or other materials provided with the distribution.
-////
-//// * Neither the name of the copyright holder nor the names of its
-////   contributors may be used to endorse or promote products derived from
-////   this software without specific prior written permission.
-////
-//// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-//// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-//// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-//// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-//// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-//// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-//// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-//// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-//// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-//// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// BSD 3-Clause License
 //
+// Copyright (c) 2019, Nefelus Inc
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #include "dbTechLayer.h"
 #include "dbDatabase.h"
 #include "dbTech.h"
@@ -272,6 +272,9 @@ _dbTechLayer::_dbTechLayer( _dbDatabase * db )
     _flags._has_protrusion = 0;
     _flags._has_alias = 0;
     _flags._spare_bits = 0;
+    _pitchDiag = 0;
+    _widthDiag = 0;
+    _spacingDiag  = 0;
     _pitch = 0;
     _width = 0;
     _spacing  = 0;
@@ -306,6 +309,11 @@ _dbTechLayer::_dbTechLayer( _dbDatabase * db )
 
 _dbTechLayer::_dbTechLayer( _dbDatabase * db, const _dbTechLayer & l )
         : _flags(l._flags),
+// DF58
+          _pitchDiag(l._pitchDiag),
+          _widthDiag(l._widthDiag),
+          _spacingDiag(l._spacingDiag),
+// ---
           _pitch(l._pitch),
           _width(l._width),
           _spacing(l._spacing),
@@ -380,6 +388,12 @@ dbOStream & operator<<( dbOStream & stream, const _dbTechLayer & layer )
     stream << layer._pitch;
     stream << layer._width;
     stream << layer._spacing;
+
+//DF58
+    stream << layer._pitchDiag;
+    stream << layer._widthDiag;
+    stream << layer._spacingDiag;
+// ---
     stream << layer._resistance;
     stream << layer._capacitance;
     stream << layer._edge_capacitance;
@@ -418,9 +432,17 @@ dbIStream & operator>>( dbIStream & stream, _dbTechLayer & layer )
   //uint tparea;
     uint * bit_field = (uint *) &layer._flags;
     stream >> *bit_field;
+
     stream >> layer._pitch;
     stream >> layer._width;
     stream >> layer._spacing;
+
+// DF58
+    stream >> layer._pitchDiag;
+    stream >> layer._widthDiag;
+    stream >> layer._spacingDiag;
+// ---
+//
     stream >> layer._resistance;
     stream >> layer._capacitance;
     stream >> layer._edge_capacitance;
@@ -526,7 +548,35 @@ dbTechLayer::setAlias( const char * alias )
     layer->_alias = strdup(alias);
     ZALLOCATED(layer->_alias);
 }
+// DF58
+uint
+dbTechLayer::getWidthDiag()
+{
+    _dbTechLayer * layer = (_dbTechLayer *) this;
+    return layer->_widthDiag;
+}
 
+void
+dbTechLayer::setWidthDiag( int width )
+{
+    _dbTechLayer * layer = (_dbTechLayer *) this;
+    layer->_widthDiag = width;
+}
+
+int
+dbTechLayer::getSpacingDiag()
+{
+    _dbTechLayer * layer = (_dbTechLayer *) this;
+    return layer->_spacingDiag;
+}
+
+void
+dbTechLayer::setSpacingDiag( int spacing )
+{
+    _dbTechLayer * layer = (_dbTechLayer *) this;
+    layer->_spacingDiag = spacing;
+}
+// ---
 uint
 dbTechLayer::getWidth()
 {
@@ -729,8 +779,11 @@ dbTechLayer::printV55SpacingRules(lefout  & writer) const
 {
   _dbTechLayer * layer = (_dbTechLayer *) this;
 	
-  fprintf(writer.out(), "SPACINGTABLE\n");
-  fprintf(writer.out(), "  PARALLELRUNLENGTH");
+  if (layer->_v55sp_length_idx.size()>0 &&  layer->_v55sp_width_idx.size()>0) {
+     fprintf(writer.out(), "SPACINGTABLE\n");
+     fprintf(writer.out(), "  PARALLELRUNLENGTH");
+  } else
+	return;
   dbVector<uint>::const_iterator  v55_itr;
   uint wddx, lndx;
 
@@ -745,7 +798,41 @@ dbTechLayer::printV55SpacingRules(lefout  & writer) const
 	fprintf(writer.out(), " %.3f", writer.lefdist(layer->_v55sp_spacing(wddx,lndx)));
     }
 
-  fprintf(writer.out(), " ;\n");
+  if (layer->_v55sp_length_idx.size()>0 ||  layer->_v55sp_width_idx.size()>0) {
+     fprintf(writer.out(), " ;\n\n");
+  }
+}
+void
+dbTechLayer::printV55SpacingRules_twoWidths(lefout  & writer) const
+{
+  _dbTechLayer * layer = (_dbTechLayer *) this;
+	
+  if (layer->_v55sp_length_idx.size()==0 &&  layer->_v55sp_width_idx.size()>0) {
+     fprintf(writer.out(), "SPACINGTABLE TWOWIDTHS");
+  } else
+	return;
+  dbVector<uint>::const_iterator  v55_itr;
+  uint wddx, lndx;
+
+  for (wddx = 0, v55_itr = layer->_v55sp_width_idx.begin(); v55_itr != layer->_v55sp_width_idx.end(); wddx++, v55_itr++)
+    {
+      fprintf(writer.out(), "\n");
+      fprintf(writer.out(), "  WIDTH %.3f\t", writer.lefdist(*v55_itr));
+
+      int prl_flag= layer->_v55sp_spacing(wddx,0);
+      if (prl_flag>0) {
+         fprintf(writer.out(), "  PRL %.3f ", writer.lefdist(layer->_v55sp_spacing(wddx,1)));
+      } else {
+         fprintf(writer.out(), "           ");
+      }
+      for (lndx = 2; lndx < layer->_v55sp_spacing.numCols(); lndx++) {
+	fprintf(writer.out(), " %.3f", writer.lefdist(layer->_v55sp_spacing(wddx,lndx)));
+      }
+    }
+
+  if (layer->_v55sp_length_idx.size()==0 ||  layer->_v55sp_width_idx.size()>0) {
+     fprintf(writer.out(), " ;\n\n");
+  }
 }
 
 bool
@@ -1140,6 +1227,21 @@ dbTechLayer::setProtrusion(uint pt_width, uint pt_length, uint pt_from_width)
   layer->_pt._from_width = pt_from_width;
 }
 
+// DF58
+int
+dbTechLayer::getPitchDiag()
+{
+    _dbTechLayer * layer = (_dbTechLayer *) this;
+    return layer->_pitchDiag;
+}
+
+void
+dbTechLayer::setPitchDiag( int pitch )
+{
+    _dbTechLayer * layer = (_dbTechLayer *) this;
+    layer->_pitchDiag = pitch;
+}
+// --
 
 int
 dbTechLayer::getPitch()

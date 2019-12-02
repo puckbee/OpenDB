@@ -674,6 +674,8 @@ dbBox::create( dbBPin * bpin_, dbTechLayer * layer_,
 
     if ( bpin->_bbox != 0 )
         return NULL;
+    if (layer_==NULL)  // TODO from DEF Parser
+	return NULL;
     
     _dbBox * box = block->_box_tbl->create();
     box->_flags._layer_id = layer_->getOID();

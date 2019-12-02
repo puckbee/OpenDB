@@ -54,6 +54,9 @@ class definINet
     virtual void pathPoint( int x, int y, int ext ) {}
     virtual void pathVia( const char * via ) {}
     virtual void pathVia( const char * via, int def_orient ) {}
+    virtual void pathVirtual() {}
+    virtual void pathMask(const char * via_name) {}
+
     virtual void pathEnd() {}
     virtual void wireEnd() {}
     virtual void source( defSource source ) {}

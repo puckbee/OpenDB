@@ -80,9 +80,20 @@ struct _LyFlags
     uint                   _has_thickness    : 1;
     uint                   _has_area         : 1;
     uint                   _has_protrusion   : 1;
+// DF58
+    uint                   _has_diag_pitch   : 1;
+    uint                   _has_diag_pwidth   : 1;
+    uint                   _has_diag_pspacing   : 1;
+// ----
     uint                   _has_alias   : 1;
-    uint                   _spare_bits  : 18;
+    uint                   _spare_bits  : 15;
 } _flags;
+
+//DF58
+    uint                   _pitchDiag;
+    uint                   _widthDiag;
+    uint                   _spacingDiag;
+//DF58 --- 
 
     uint                   _pitch;
     uint                   _width;

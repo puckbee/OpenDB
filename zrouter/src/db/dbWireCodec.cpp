@@ -229,7 +229,7 @@ int dbWireEncoder::addPoint( int x, int y, uint property )
         }
         else
         {
-            ZASSERT( DB_WIRE_ENCODER_NON_ORTHOGANAL_SEGMENT );
+            // TODO def parser ZASSERT( DB_WIRE_ENCODER_NON_ORTHOGANAL_SEGMENT );
         }
     }
     else
@@ -391,8 +391,8 @@ int dbWireEncoder::addVia( dbVia * via )
     }
     else
     {
-        ZASSERT(DB_WIRE_ENCODER_INVALID_VIA_LAYER);
-        addOp(WOP_VIA, 0);
+        // TODO def parser ZASSERT(DB_WIRE_ENCODER_INVALID_VIA_LAYER);
+        // addOp(WOP_VIA, 0);
     }
 
     _via_cnt++;
@@ -418,8 +418,8 @@ int dbWireEncoder::addTechVia( dbTechVia * via )
     }
     else
     {
-        ZASSERT(DB_WIRE_ENCODER_INVALID_VIA_LAYER);
-        addOp(WOP_TECH_VIA, 0);
+        // TODO def parser ZASSERT(DB_WIRE_ENCODER_INVALID_VIA_LAYER);
+        // addOp(WOP_TECH_VIA, 0);
     }
 
     _via_cnt++;

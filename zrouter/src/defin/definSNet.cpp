@@ -382,6 +382,7 @@ void definSNet::path( const char * layer_name, int width )
     {
         notice(0,"error: undefined layer (%s) referenced\n", layer_name );
         ++_errors;
+if (_swire!=NULL) // TODO test Parser
         dbSWire::destroy(_swire);
         _swire = NULL;
         return;

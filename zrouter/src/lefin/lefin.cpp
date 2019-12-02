@@ -1,34 +1,34 @@
 ///////////////////////////////////////////////////////////////////////////////
-////// BSD 3-Clause License
-//////
-////// Copyright (c) 2019, Nefelus Inc
-////// All rights reserved.
-//////
-////// Redistribution and use in source and binary forms, with or without
-////// modification, are permitted provided that the following conditions are met:
-//////
-////// * Redistributions of source code must retain the above copyright notice, this
-//////   list of conditions and the following disclaimer.
-//////
-////// * Redistributions in binary form must reproduce the above copyright notice,
-//////   this list of conditions and the following disclaimer in the documentation
-//////   and/or other materials provided with the distribution.
-//////
-////// * Neither the name of the copyright holder nor the names of its
-//////   contributors may be used to endorse or promote products derived from
-//////   this software without specific prior written permission.
-//////
-////// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-////// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-////// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-////// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-////// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-////// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-////// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-////// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-////// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-////// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// BSD 3-Clause License
 //
+// Copyright (c) 2019, Nefelus Inc
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of the copyright holder nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 #ifdef WIN32
 #pragma warning (disable : 4786)
 #endif
@@ -612,6 +612,15 @@ void lefin::layer( lefiLayer * layer )
 
     if ( layer->hasPitch() )
         l->setPitch( dbdist(layer->pitch() ) );
+
+    if ( layer->hasDiagWidth() )
+        l->setWidthDiag( dbdist(layer->diagWidth() ) );
+
+    if ( layer->hasDiagPitch() )
+        l->setPitchDiag( dbdist(layer->diagPitch() ) );
+    
+    if ( layer->hasDiagSpacing() )
+        l->setSpacingDiag( dbdist(layer->diagSpacing() ) );
     
     int j;
     dbTechLayerSpacingRule  *cur_rule;
@@ -667,11 +676,50 @@ void lefin::layer( lefiLayer * layer )
 		assert(tmply = _tech->findLayer(layer->spacingName(j)));
 		cur_rule->setCutLayer4Spacing(tmply);
 	      }
-	    else
-	      l->setSpacing( dbdist(layer->spacing(j)) );
+	    else if (layer->hasSpacingTableOrtho()>0)
+	      {
+		lefiOrthogonal *orthoTbl= layer->orthogonal();
+		if (orthoTbl!=NULL) {
+
+		    int cnt= orthoTbl->numOrthogonal();
+		    for (int ii= 0; ii<cnt; ii++) {
+			double cutWithin= orthoTbl->cutWithin(ii);
+			double orthoSp= orthoTbl->orthoSpacing(ii);
+	// fprintf(stdout, "K_SPACINGTABLE K_ORTHOGONAL K_WITHIN NUMBER K_SPACING NUMBER %g %g\n",
+			// cutWithin, orthoSp);
+		    }
+		}
+              }
+	    else 
+              {
+		bool sameNet= layer->hasSpacingSamenet(j);
+		bool pgonly= layer->hasSpacingSamenetPGonly(j);
+                if (sameNet)
+	      	    cur_rule->setSpacingSamenet( dbdist(layer->spacing(j)), sameNet, pgonly );
+                else
+	      	    cur_rule->setSpacing( dbdist(layer->spacing(j)) );
+              }
 	  }
       }
+/*
+    if (layer->hasSpacingNumber())
+      {
+	if (layer->hasSpacingTableOrtho()>0)
+	  {
+		lefiOrthogonal *orthoTbl= layer->orthogonal();
+		if (orthoTbl!=NULL) {
 
+		    int cnt= orthoTbl->numOrthogonal();
+		    for (int ii= 0; ii<cnt; ii++) {
+			double cutWithin= orthoTbl->cutWithin(ii);
+			double orthoSp= orthoTbl->orthoSpacing(ii);
+	fprintf(stdout, "K_SPACINGTABLE K_ORTHOGONAL K_WITHIN NUMBER K_SPACING NUMBER %g %g\n",
+			cutWithin, orthoSp);
+		    }
+		}
+          }
+	}
+*/
     lefiSpacingTable  *cur_sptbl;
     for (j = 0; j < layer->numSpacingTable(); j++)
       {
@@ -691,8 +739,46 @@ void lefin::layer( lefiLayer * layer )
 	  }
 	else  // Assume parallel run length spacing table
 	  {
-	fprintf(stdout, "TODO: Assume parallel run length spacing table \n");
-/* TODO
+		int maxCol=0;
+		lefiTwoWidths *cur_ipl= cur_sptbl->twoWidths();
+            if (cur_ipl!=0) {
+	      //fprintf(stdout, "TODO: Assume TwoWidths spacing table \n");
+	      for (int wddx = 0; wddx < cur_ipl->numWidth(); wddx++) {
+                int sp_w_count= cur_ipl->numWidthSpacing(wddx);
+		if (maxCol<sp_w_count)
+		   maxCol= sp_w_count;
+              }
+	    // l->initV55LengthIndex( maxCol+2);
+	    // for (int lndx = 0; lndx < maxCol+2; lndx++)
+	      // l->addV55LengthEntry(0);
+
+	      l->initV55WidthIndex(cur_ipl->numWidth());
+	      l->initV55SpacingTable(cur_ipl->numWidth(), maxCol+2);
+				   
+	      for (int wddx = 0; wddx < cur_ipl->numWidth(); wddx++) {
+		double w= cur_ipl->width(wddx);
+		l->addV55WidthEntry(dbdist(w));
+
+		double w_prl= cur_ipl->widthPRL(wddx);
+                int prl_flag= cur_ipl->hasWidthPRL(wddx);
+		// fprintf(stdout, "   WIDTH %g PRL %d %g   ", w, prl_flag, w_prl);
+
+		l->addV55SpacingTableEntry(wddx,0,prl_flag);
+                if (prl_flag>0)
+		   l->addV55SpacingTableEntry(wddx,1,dbdist(w_prl));
+                else
+		   l->addV55SpacingTableEntry(wddx,1,0);
+
+                int sp_w_count= cur_ipl->numWidthSpacing(wddx);
+                for (int w1= 0; w1<sp_w_count; w1++) {
+                   double v= cur_ipl->widthSpacing(wddx, w1);
+		   l->addV55SpacingTableEntry(wddx,w1+2,dbdist(v));
+		}
+              }
+            } else {
+
+
+	      // fprintf(stdout, "TODO: Assume parallel run length spacing table \n");
 	    lefiParallel *cur_ipl = cur_sptbl->parallel();
 	    int wddx,lndx;
 
@@ -713,7 +799,7 @@ void lefin::layer( lefiLayer * layer )
 			l->setSpacing(dbdist(cur_ipl->widthSpacing(wddx,lndx)));
 		  }
 	      }
-*/
+	  }
 	  }
       }
 
@@ -979,6 +1065,20 @@ void lefin::macro( lefiMacro * macro )
 
     if ( macro->has90Symmetry() )
         _master->setSymmetryR90();
+
+    for (int ii= 0; ii<macro->numProperties(); ii++) {
+        const char* v= macro->propValue(ii);
+        const char* name= macro->propName(ii);
+        const char propType= macro->propType(ii);
+		// fprintf(stdout, "Prop: %s %s %c %s\n", macro->name(), name, propType, v);
+	if (propType=='S')
+                 dbStringProperty::create(_master, name, v);
+	else if (propType=='I')
+                 dbIntProperty::create(_master, name, atoi(v));
+	if (propType=='R')
+                 dbDoubleProperty::create(_master, name, atof(v));
+
+    }
 }
 
 void lefin::macroEnd( const char * macroName )

@@ -604,9 +604,32 @@ dbVia * definNet::getRotatedVia(const char * via_name, int orient )
 
     return via;
 }
+// DF58 ----------------------------------------------------------
+void definNet::pathVirtual()
+{
+    if ( _wire == NULL )
+        return;
 
+    // _wire_encoder.addVia( via );
+    
+        // notice(0,"Warning: VIRTUAL is found\n");
+}
+void definNet::pathMask(const char * mask)
+{
+    if ( _wire == NULL )
+        return;
+
+    // _wire_encoder.addVia( via );
+    
+        // notice(0,"Warning: MASK %s\n", mask);
+}
+// ---
 void definNet::pathVia( const char * via_name, int def_orient )
 {
+	if (strcmp(via_name, "RECT")==0)
+		return;
+
+        // notice(0,"Warning: definNet::pathVia %s %d\n", via_name, def_orient );
     if ( _wire == NULL )
         return;
 
