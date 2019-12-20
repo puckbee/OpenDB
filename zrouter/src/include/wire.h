@@ -44,12 +44,12 @@
 
 #include "array1.h"
 
-#include "seq.h"
+//#include "seq.h"
 #include "geom.h"
 #include "ZInterface.h"
 
 
-// #include "gseq.h"
+#include "gseq.h"
 
 #ifndef ADS_DB_H
 #include "db.h"
@@ -304,7 +304,7 @@ public:
 	void findNeighborWire(Ath__wire*, Ath__array1D<Ath__wire*>*, bool);
 	uint searchSpread(uint srcTrack, void *ip, uint trackDist, uint met, void (*doSpread)(void *, uint, void *, void *, void *));
 	void getTrackWires (std::vector<Ath__wire *> &ctxwire);
-	// void buildDgContext(Ath__array1D<SEQ *> *dgContext, Ath__wire ** & allWire, int & awcnt, int & a1wcnt);
+	 void buildDgContext(Ath__array1D<SEQ *> *dgContext, Ath__wire ** & allWire, int & awcnt, int & a1wcnt);
 	int getBandWires(Ath__array1D<Ath__wire*> *bandWire);
 	uint couplingCaps(Ath__grid *resGrid, uint currentTrack, uint ccTrackDist, uint ccDomain, ZInterface *context, Ath__array1D<uint> *ccTable,
 		uint met, void (*coupleAndCompute)(int *, void *), void *compPtr);
@@ -703,7 +703,7 @@ public:
 	void setDefaultWireType(uint v);
 	uint searchSpread(void *ip, uint spreadTrackDist, std::vector<dbNet *> & inets, char *bbox, void (*doSpread)(void *, uint, void *, void *, void *));
 	void buildDgContext(int base, uint level, uint dir);
-	// Ath__array1D<SEQ *> *renewDgContext(uint gridn, uint trackn);
+	Ath__array1D<SEQ *> *renewDgContext(uint gridn, uint trackn);
 	uint couplingCaps(Ath__gridTable *resGridTable, uint couplingDist, ZInterface *context, Ath__array1D<uint> *ccTable,
 		void (*coupleAndCompute)(int *, void *), void *compPtr);
 	uint couplingCaps(uint row, uint col, Ath__grid *resGrid, uint couplingDist, ZInterface *context);
@@ -720,7 +720,7 @@ public:
 	uint contextDepth() {return _ccContextDepth;};
 	void setContextLength(uint level, uint contextLength) { _ccContextLength[level] = contextLength; };
 	Ath__array1D<int> **contextArray() { return _ccContextArray;};
-	// AthPool<SEQ> *seqPool() { return _seqPool; };
+	AthPool<SEQ> *seqPool() { return _seqPool; };
 	Ath__array1D<SEQ*>*** dgContextArray() { return _dgContextArray; };
 	int **dgContextTrackBase() { return _dgContextTrackBase; };
 	uint *dgContextBaseTrack() { return _dgContextBaseTrack; };
@@ -737,7 +737,7 @@ public:
 	void incrOfflineOverlapCnt() {_offlineOverlapCnt++;};
 	void incrOfflineOverlapTouch() {_offlineOverlapTouch++;};
 	void incrCCshorts() {_CCshorts++;};
-	// void setExtControl(dbBlock *block, bool useDbSdb, uint adj, uint npsrc, uint nptgt, uint ccUp, bool allNet, uint contextDepth, Ath__array1D<int> **contextArray, uint *contextLength, Ath__array1D<SEQ*> ***dgContextArray, uint *dgContextDepth, uint *dgContextPlanes, uint *dgContextTracks, uint *dgContextBaseLvl, int *dgContextLowLvl, int *dgContextHiLvl, uint *dgContextBaseTrack, int *dgContextLowTrack, int *dgContextHiTrack, int **dgContextTrackBase, AthPool<SEQ> *seqPool);
+	void setExtControl(dbBlock *block, bool useDbSdb, uint adj, uint npsrc, uint nptgt, uint ccUp, bool allNet, uint contextDepth, Ath__array1D<int> **contextArray, uint *contextLength, Ath__array1D<SEQ*> ***dgContextArray, uint *dgContextDepth, uint *dgContextPlanes, uint *dgContextTracks, uint *dgContextBaseLvl, int *dgContextLowLvl, int *dgContextHiLvl, uint *dgContextBaseTrack, int *dgContextLowTrack, int *dgContextHiTrack, int **dgContextTrackBase, AthPool<SEQ> *seqPool);
 	bool usingDbSdb () { return _useDbSdb; }
 	void reverseTargetTrack();
 	bool targetTrackReversed() { return _targetTrackReversed; };

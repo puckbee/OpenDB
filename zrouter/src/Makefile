@@ -51,6 +51,7 @@ LIBDIRS= \
 	milos \
 	media \
 	utils \
+	ext \
 	ModuleTemplate
 
 

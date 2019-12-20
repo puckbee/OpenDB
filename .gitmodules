@@ -1,0 +1,3 @@
+[submodule "zrouter/src/ext"]
+	path = zrouter/src/ext
+	url = https://github.com/nefelus/OpenRCX.git
