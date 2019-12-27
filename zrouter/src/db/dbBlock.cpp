@@ -2694,6 +2694,11 @@ void dbBlock::setBufferAltered(bool value)
 	_dbBlock * block = (_dbBlock *) this;
     block->_flags._buffer_altered = value ? 1 : 0;
 }
+dbBlockSearch *dbBlock::getSearchDb()
+{
+        _dbBlock * block = (_dbBlock *) this;
+        return block->_searchDb;
+}
 #ifdef ZUI
 ZPtr<ISdb> dbBlock::getSignalNetSdb(ZContext & context, dbTech *tech)
 {
@@ -2703,11 +2708,6 @@ ZPtr<ISdb> dbBlock::getSignalNetSdb(ZContext & context, dbTech *tech)
 	if (block->_searchDb==NULL)
 		return NULL;
 	return block->_searchDb->getSignalNetSdb(context);
-}
-dbBlockSearch *dbBlock::getSearchDb()
-{
-        _dbBlock * block = (_dbBlock *) this;
-        return block->_searchDb;
 }
 ZPtr<ISdb> dbBlock::getNetSdb(ZContext & context, dbTech *tech)
 {

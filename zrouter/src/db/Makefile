@@ -95,8 +95,9 @@ SRCS=  \
         dbPropertyItr.cpp \
         dbFlatten.cpp \
         dbUtil.cpp \
+        dbSearch.cpp
 
-EXCLUDE_SRC= dbSearch.cpp dbZgui.cpp 
+EXCLUDE_SRC= dbZgui.cpp 
 ##############################################
 # Add custom targets below the following line.
 include ../Makefile.rules

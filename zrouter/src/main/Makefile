@@ -30,6 +30,8 @@ LIBS= \
       ../db/WireConn/libdb_conn.a \
       ../db/db_tcl/libdb_tcl.a \
       ../db/libdb.a \
+      ../dcr/libdcr.a \
+      ../ext/libext.a \
       ../sylib/libsylib.a \
       ../sver/libsver.a \
       ../defout/libdefout.a \
