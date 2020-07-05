@@ -177,7 +177,8 @@ private:
 
 	uint _dir:1;
 	uint _ext:1;
-
+	uint _visited:1;
+	
 public:
 	void reset();
 	// void set(int xy1, int xy2);
@@ -195,6 +196,7 @@ public:
 	void setOtherId(uint id);
 	uint getOtherId();
 	bool isPower();
+	bool isVia();
 	bool isTilePin();
 	bool isTileBus();
 	uint getOwnerId();
