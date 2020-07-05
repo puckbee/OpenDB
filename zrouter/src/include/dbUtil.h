@@ -68,7 +68,6 @@ class dbCreateNetUtil
     dbTech *                              _tech;
     dbBlock *                             _block;
     std::vector<RuleMap>                  _rules;
-    std::vector<dbTechLayer *>            _routingLayers;
     int                                   _ruleNameHint;
     dbMatrix< std::vector<dbTechVia *> >  _vias;
 	bool								  _milosFormat;
@@ -83,6 +82,8 @@ class dbCreateNetUtil
     std::pair<dbBTerm *,dbBTerm *> createTerms4SingleNet(dbNet * net, int x1, int y1, int x2, int y2, dbTechLayer *inly);
     
   public:
+      std::vector<dbTechLayer *>            _routingLayers;
+
     dbTechLayerRule * getRule(int routingLayer, int width);
     
         bool                                _skipPowerNets;
