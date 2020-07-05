@@ -572,6 +572,14 @@ bool Ath__wire::isPower()
 	else
 		return false;
 }
+bool Ath__wire::isVia()
+{
+	uint via_wire_id = 5; // see db/dbSearch.cpp
+	if (_flags==via_wire_id)
+		return true;
+	else
+		return false;
+}
 void Ath__wire::setOtherId(uint id)
 {
 	_otherId= id;
@@ -620,6 +628,8 @@ void Ath__wire::set(uint dir, int *ll, int *ur )
 
 	_base= yx1; // small dimension
 	_width= yx2-yx1;
+
+	_visited=0;
 }
 Ath__wire * Ath__track::getTargetWire()
 {
