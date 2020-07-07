@@ -2466,6 +2466,7 @@ uint Ath__grid::placeWire(Ath__searchBox *bb)
 	for (uint ii= trackNum1+1; ii<=trackNum2; ii++) {
 		Ath__wire *w1= makeWire(w, wireType);
 		w1->_srcId= w->_id;
+		w1->_srcWire= w;
 		_gridtable->incrMultiTrackWireCnt(w->isPower());
 		Ath__track *track= getTrackPtr(ii, _markerCnt);
 		//track->place2(w1, m1, m2);
@@ -3064,6 +3065,7 @@ Ath__wire *Ath__grid::makeWire(uint dir, int *ll, int *ur, uint id1, uint id2, u
 {	
 	Ath__wire *w= getPoolWire();
 	w->_srcId= 0;
+	w->_srcWire= NULL;
 
 	w->reset();
 	w->set(dir, ll, ur);

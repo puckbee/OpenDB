@@ -160,6 +160,7 @@ class Ath__wire
 private:
 	uint _id;
 	uint _srcId; //TODO-OPTIMIZE
+	Ath__wire *_srcWire;
 	uint _boxId;
 	uint _otherId;
 
